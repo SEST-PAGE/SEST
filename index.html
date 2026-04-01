@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SEST.SA – Cotizador Eléctrico</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#060b12;--surface:#0d1520;--card:#111d2b;--border:#1a2e44;
+  --il:#f5a623;--il-d:rgba(245,166,35,.12);
+  --fu:#3b9eff;--fu-d:rgba(59,158,255,.12);
+  --es:#ff5e5b;--es-d:rgba(255,94,91,.12);
+  --ok:#27e8a7;--mu:#4a6782;--tx:#b8cedd;--wh:#e8f0f8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(59,158,255,.07),transparent),
+  linear-gradient(rgba(59,158,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,158,255,.03) 1px,transparent 1px);
+  background-size:100% 100%,44px 44px,44px 44px;}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:58px;
+  background:rgba(13,21,32,.95);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;
+  backdrop-filter:blur(12px);}
+.logo{display:flex;align-items:center;gap:11px;min-width:0}
+.lm{width:36px;height:36px;flex-shrink:0;background:linear-gradient(135deg,var(--fu),#0044cc);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;color:#fff;
+  box-shadow:0 0 18px rgba(59,158,255,.4);letter-spacing:.5px}
+.lt{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.2rem;letter-spacing:3px;color:var(--wh)}
+.lt span{color:var(--fu)}
+.ls{font-size:.55rem;letter-spacing:1.5px;color:var(--mu);text-transform:uppercase;font-family:'DM Mono',monospace;margin-top:1px}
+.li{display:flex;flex-direction:column}
+.hr{display:flex;align-items:center;gap:8px}
+.si{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--ok);opacity:0;transition:opacity .5s;letter-spacing:1px}
+.si.show{opacity:1}
+.cbtn{font-family:'Rajdhani',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  color:var(--mu);background:none;border:1px solid var(--border);border-radius:4px;padding:5px 10px;cursor:pointer;transition:all .2s}
+.cbtn:hover{color:var(--es);border-color:var(--es)}
+
+/* TABS */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:12px 16px;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.78rem;letter-spacing:2px;
+  text-transform:uppercase;color:var(--mu);cursor:pointer;border:none;background:none;
+  border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--tx)}
+.tab.active{color:var(--fu);border-bottom-color:var(--fu)}
+.nb{background:var(--fu);color:#000;border-radius:10px;padding:1px 6px;font-size:.58rem;font-weight:700}
+
+/* LAYOUT */
+main{max-width:1160px;margin:0 auto;padding:16px}
+.sec{display:none}.sec.active{display:block;animation:fu .3s}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* PANEL */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:16px;overflow:hidden}
+.ph{background:var(--surface);border-bottom:1px solid var(--border);padding:11px 16px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ph h2{font-family:'Rajdhani',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--wh);flex:1}
+.pb{padding:16px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.di{background:var(--il);box-shadow:0 0 7px var(--il)}
+.df{background:var(--fu);box-shadow:0 0 7px var(--fu)}
+.de{background:var(--es);box-shadow:0 0 7px var(--es)}
+.dk{background:var(--ok);box-shadow:0 0 7px var(--ok)}
+.dw{background:var(--wh)}
+
+/* FORM */
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;align-items:end}
+.fgp{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px}
+label{font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mu)}
+input,select{background:var(--bg);border:1px solid var(--border);color:var(--wh);padding:8px 10px;
+  font-family:'DM Mono',monospace;font-size:.8rem;border-radius:4px;
+  transition:border-color .2s,box-shadow .2s;outline:none;width:100%}
+input:focus,select:focus{border-color:var(--fu);box-shadow:0 0 0 3px rgba(59,158,255,.1)}
+input::placeholder{color:var(--mu);opacity:.4}
+select option{background:var(--surface)}
+input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--fu)}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+
+/* BUTTONS */
+.btn{padding:8px 16px;font-family:'Rajdhani',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;border:none;border-radius:4px;cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;min-height:36px}
+.bb{background:var(--fu);color:#000}.bb:hover{background:#6ab8ff;box-shadow:0 0 18px rgba(59,158,255,.5)}
+.ba{background:var(--il);color:#000}.ba:hover{background:#ffc857;box-shadow:0 0 18px rgba(245,166,35,.5)}
+.br{background:var(--es);color:#fff}.br:hover{background:#ff8180;box-shadow:0 0 18px rgba(255,94,91,.5)}
+.bg{background:var(--ok);color:#000}.bg:hover{background:#5fffc5;box-shadow:0 0 18px rgba(39,232,167,.5)}
+.bo{background:transparent;color:var(--fu);border:1px solid var(--fu)}.bo:hover{background:rgba(59,158,255,.08)}
+.bd{background:transparent;color:var(--es);border:1px solid transparent;padding:4px 8px;font-size:.62rem}
+.bd:hover{border-color:var(--es);background:rgba(255,94,91,.08)}
+.sm-btn{padding:5px 10px;font-size:.62rem;min-height:28px}
+
+/* TIPO SELECTOR */
+.tg3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.to{padding:10px 8px;border:1px solid var(--border);border-radius:5px;cursor:pointer;transition:all .2s;
+  text-align:center;background:var(--bg);-webkit-user-select:none;user-select:none}
+.to:hover{border-color:var(--mu)}
+.to *{pointer-events:none}
+.to.sil{border-color:var(--il);background:var(--il-d)}
+.to.sfu{border-color:var(--fu);background:var(--fu-d)}
+.to.ses{border-color:var(--es);background:var(--es-d)}
+.to .ti2{font-size:1.2rem;display:block;margin-bottom:3px}
+.to .tl{font-family:'Rajdhani',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu)}
+.to.sil .tl{color:var(--il)}.to.sfu .tl{color:var(--fu)}.to.ses .tl{color:var(--es)}
+.to .tn{font-size:.58rem;color:var(--mu);margin-top:2px;font-family:'DM Mono',monospace}
+
+/* TAGS */
+.tag{display:inline-block;padding:2px 7px;border-radius:3px;font-size:.6rem;font-weight:700;
+  font-family:'Rajdhani',sans-serif;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.ti{background:var(--il-d);color:var(--il);border:1px solid rgba(245,166,35,.2)}
+.tf{background:var(--fu-d);color:var(--fu);border:1px solid rgba(59,158,255,.2)}
+.te{background:var(--es-d);color:var(--es);border:1px solid rgba(255,94,91,.2)}
+.tg{background:rgba(39,232,167,.1);color:var(--ok);border:1px solid rgba(39,232,167,.2)}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:.78rem}
+.tbl th{font-family:'Rajdhani',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--mu);padding:8px 10px;border-bottom:1px solid var(--border);
+  background:var(--surface);text-align:left;white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid rgba(26,46,68,.5);font-family:'DM Mono',monospace;
+  font-size:.76rem;vertical-align:middle}
+.tbl tr:hover td{background:rgba(255, 226, 59, 0.03)}
+.nm{font-family:'DM Sans',sans-serif!important;font-weight:500;color:var(--wh)}
+.tbl-wrap{overflow-x:auto}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:1px;
+  background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.stat{background:var(--card);padding:14px 16px}
+.sl{font-family:'Rajdhani',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mu)}
+.sv{font-family:'DM Mono',monospace;font-size:1.3rem;color:var(--wh);margin:3px 0}
+.su{font-size:.58rem;color:var(--mu);font-family:'Rajdhani',sans-serif;letter-spacing:1px}
+
+/* CIRCUIT CARDS */
+.cc{border-radius:6px;overflow:hidden;border:1px solid var(--border);border-left-width:4px;margin-bottom:12px}
+.cc.cil{border-left-color:var(--il)}.cc.cfu{border-left-color:var(--fu)}.cc.ces{border-left-color:var(--es)}.cc.cac{border-left-color:var(--ok)}
+.ch{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;padding:10px 14px;background:var(--surface)}
+.cid{font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:2px;color:var(--wh)}
+.csp{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cb{padding:12px 14px}
+.citems{margin-top:6px}
+.cit{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;
+  background:rgba(0,0,0,.2);border-radius:3px;margin-bottom:3px;font-size:.76rem}
+.cit .cn{color:var(--wh);font-family:'DM Sans',sans-serif;font-weight:500}
+.cit .cv{font-family:'DM Mono',monospace;color:var(--mu);font-size:.7rem}
+.cprot{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.pb2{background:rgba(0,0,0,.22);border-radius:4px;padding:9px 10px;text-align:center}
+.pico{font-size:1.1rem}
+.plbl{font-family:'Rajdhani',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-top:3px}
+.pval{font-family:'DM Mono',monospace;font-size:.8rem;margin-top:2px}
+.pval.pi{color:var(--il)}.pval.pf{color:var(--fu)}.pval.pe{color:var(--es)}.pval.pg{color:var(--ok)}
+.pac-card{background:linear-gradient(135deg,rgba(39,232,167,.08),rgba(59,158,255,.05));border:1px solid rgba(39,232,167,.25);border-radius:6px;padding:16px;margin-bottom:16px}
+.pac-title{font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ok);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.pac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.pac-item{background:rgba(0,0,0,.3);border-radius:4px;padding:10px 12px;text-align:center}
+.pac-lbl{font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mu)}
+.pac-val{font-family:'DM Mono',monospace;font-size:1.1rem;color:var(--ok);margin-top:4px}
+.pac-sub{font-size:.62rem;color:var(--mu);margin-top:2px}
+
+/* MATERIALS */
+.mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pr{display:flex;align-items:flex-start;justify-content:space-between;padding:9px 0;
+  border-bottom:1px solid rgba(26,46,68,.5);gap:10px;flex-wrap:wrap}
+.pr:last-child{border:none}
+.pl{font-size:.78rem;color:var(--tx);flex:1;min-width:140px}
+.pl small{display:block;font-size:.62rem;color:var(--mu);font-family:'DM Mono',monospace;margin-top:2px}
+.pw{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.cur{font-family:'Rajdhani',sans-serif;font-size:.72rem;color:var(--mu);font-weight:700}
+.pw input{width:80px;text-align:right}
+.iva-row{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--mu);white-space:nowrap}
+.iva-row input[type=checkbox]{width:14px;height:14px}
+.mode-toggle{display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:0}
+.mt-btn{padding:4px 10px;font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;background:var(--bg);color:var(--mu);border:none;cursor:pointer;transition:all .2s}
+.mt-btn.active{background:var(--fu);color:#000}
+.roll-w{display:flex;align-items:center;gap:4px;font-size:.65rem;color:var(--mu)}
+.roll-w input{width:55px;text-align:center}
+.eq-price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.epr{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px;flex-wrap:wrap}
+.epr .en{font-size:.78rem;color:var(--wh);font-family:'DM Sans',sans-serif;font-weight:500;flex:1;min-width:100px}
+.epr-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.epr-right input{width:72px;text-align:right}
+
+/* TOTAL BOX */
+.totbox{background:var(--surface);border:1px solid var(--fu);border-radius:6px;padding:18px 20px;margin-top:16px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.totlbl{font-family:'Rajdhani',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mu)}
+.totval{font-family:'DM Mono',monospace;font-size:1.8rem;color:var(--fu)}
+
+/* ALERTS */
+.alert{padding:9px 13px;border-radius:4px;font-size:.76rem;margin-bottom:12px;display:flex;align-items:flex-start;gap:7px;line-height:1.5}
+.ai{background:rgba(59,158,255,.08);border:1px solid rgba(59,158,255,.2);color:var(--fu)}
+.aw{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);color:var(--il)}
+.ak{background:rgba(39,232,167,.06);border:1px solid rgba(39,232,167,.2);color:var(--ok)}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 16px;color:var(--mu)}
+.empty .ei{font-size:2rem;margin-bottom:10px}
+.empty p{font-family:'Rajdhani',sans-serif;font-size:.78rem;letter-spacing:1px;text-transform:uppercase}
+
+/* ACTIONS */
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* VALIDITY BAR */
+.vbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.vopt{padding:5px 12px;font-family:'Rajdhani',sans-serif;font-size:.68rem;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;background:var(--bg);border:1px solid var(--border);border-radius:3px;
+  cursor:pointer;transition:all .2s;color:var(--mu)}
+.vopt:hover{border-color:var(--fu);color:var(--fu)}
+.vopt.active{background:var(--fu);color:#000;border-color:var(--fu)}
+
+/* DEMAND BOX */
+.dembox{background:rgba(39,232,167,.04);border:1px solid rgba(39,232,167,.2);border-radius:6px;padding:12px 14px;margin-top:8px}
+.demtit{font-family:'Rajdhani',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ok);margin-bottom:8px}
+.demrow{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:.73rem}
+.demrow span:first-child{color:var(--mu)}
+.demrow span:last-child{font-family:'DM Mono',monospace;color:var(--tx)}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .tg3{grid-template-columns:1fr}
+  .mat-grid{grid-template-columns:1fr}
+  .fg{grid-template-columns:1fr 1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .cprot{grid-template-columns:repeat(2,1fr)}
+  .pac-grid{grid-template-columns:repeat(2,1fr)}
+  .fgp{grid-template-columns:1fr 1fr}
+  .lt{font-size:1rem;letter-spacing:2px}
+  .ls{display:none}
+  .tab{padding:10px 11px;font-size:.7rem;letter-spacing:1px}
+}
+@media(max-width:440px){
+  .fg{grid-template-columns:1fr}
+  .tg3{grid-template-columns:1fr 1fr}
+  .to .ti2{font-size:1rem}
+  main{padding:10px}
+  .tg3 .to:nth-child(3){grid-column:span 2}
+  header{padding:0 10px}
+  .cbtn{display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="lm">SE</div>
+    <div class="li">
+      <span class="lt">SEST<span>.SA</span></span>
+      <span class="ls">Servicios Eléctricos &amp; Seguridad Tapia</span>
+    </div>
+  </div>
+  <div class="hr">
+    <span class="si" id="si">✔ guardado</span>
+    <button class="cbtn" onclick="confirmClear()">Limpiar todo</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" id="t-eq" onclick="gotoTab('eq',this)">⚡ Equipos <span class="nb" id="nb-eq">0</span></button>
+  <button class="tab" id="t-ci" onclick="gotoTab('ci',this)">🔌 Circuitos <span class="nb" id="nb-ci">0</span></button>
+  <button class="tab" id="t-ma" onclick="gotoTab('ma',this)">🔧 Materiales</button>
+  <button class="tab" id="t-re" onclick="gotoTab('re',this)">📋 Resumen &amp; PDF</button>
+</div>
+
+<main>
+
+<!-- ========== EQUIPOS ========== -->
+<div class="sec active" id="sec-eq">
+
+  <div class="panel">
+    <div class="ph"><div class="dot df"></div><h2>Datos del Proyecto</h2></div>
+    <div class="pb">
+      <div class="fgp">
+        <div class="field"><label>Proyecto</label><input id="pj-name" placeholder="Nombre del proyecto" oninput="ss()"></div>
+        <div class="field"><label>Cliente</label><input id="pj-client" placeholder="Nombre del cliente" oninput="ss()"></div>
+        <div class="field"><label>Dirección</label><input id="pj-addr" placeholder="Dirección de la obra" oninput="ss()"></div>
+        <div class="field"><label>Fecha cotización</label><input type="date" id="pj-date" oninput="updateExpiry();ss()"></div>
+        <div class="field"><label>Elaborado por</label><input id="pj-by" placeholder="Técnico / Empresa" oninput="ss()"></div>
+        <div class="field">
+          <label>Validez de cotización</label>
+          <div class="vbar" id="vbar">
+            <button class="vopt" onclick="setValidity(1,this)">1 día</button>
+            <button class="vopt" onclick="setValidity(7,this)">7 días</button>
+            <button class="vopt" onclick="setValidity(15,this)">15 días</button>
+            <button class="vopt active" onclick="setValidity(30,this)">30 días</button>
+          </div>
+          <span style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--mu);margin-top:4px" id="expiry-lbl"></span>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">
+        <div class="field">
+          <label>Tipo de aislante del cable</label>
+          <select id="insul" onchange="ss()">
+            <option value="TW">TW (60°C)</option>
+            <option value="THW">RHW / THW / THWN (75°C)</option>
+            <option value="THHN" selected>THHN / XHHW-2 / THWN-2 (90°C)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tipo de instalación</label>
+          <select id="inst-type" onchange="ss()">
+            <option value="res" selected>Residencial</option>
+            <option value="com">Comercial</option>
+            <option value="ind">Industrial</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Factor de simultaneidad</label>
+          <select id="sim-f" onchange="ss()">
+            <option value="1.0">1.0 – Sin factor (100%)</option>
+            <option value="0.9">0.9 – Industrial</option>
+            <option value="0.8" selected>0.8 – Residencial (NEC Ec.)</option>
+            <option value="0.7">0.7 – Comercial pequeño</option>
+            <option value="0.6">0.6 – Comercial mediano</option>
+            <option value="0.5">0.5 – Comercial grande</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph"><div class="dot df"></div><h2>Agregar Equipo Eléctrico</h2></div>
+    <div class="pb">
+      <label style="display:block;margin-bottom:7px">Tipo de Circuito</label>
+      <div class="tg3" id="tg3">
+        <div class="to sil" data-tipo="iluminacion" onclick="selTipo(this)">
+          <span class="ti2">💡</span>
+          <span class="tl">Iluminación</span>
+          <span class="tn">14 AWG · 15 A</span>
+        </div>
+        <div class="to" data-tipo="fuerza" onclick="selTipo(this)">
+          <span class="ti2">🔌</span>
+          <span class="tl">Fuerza / Tom.</span>
+          <span class="tn">12 AWG · 20 A</span>
+        </div>
+        <div class="to" data-tipo="especial" onclick="selTipo(this)">
+          <span class="ti2">⚡</span>
+          <span class="tl">Especial / Pot.</span>
+          <span class="tn">Calculado NEC</span>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="field" style="min-width:190px"><label>Nombre del Equipo</label><input id="eq-name" placeholder="Ej: Focos LED, Plancha, AC…"></div>
+        <div class="field"><label>Potencia (W)</label><input type="number" id="eq-w" placeholder="150" min="1"></div>
+        <div class="field"><label>Cantidad</label><input type="number" id="eq-qty" value="1" min="1"></div>
+        <div class="field"><label>Voltaje (V)</label>
+          <select id="eq-v">
+            <option value="120">120 V – 1Φ</option>
+            <option value="220" selected>220 V – 1Φ</option>
+            <option value="240">240 V – 1Φ</option>
+            <option value="208">208 V – 3Φ</option>
+            <option value="380">380 V – 3Φ</option>
+          </select>
+        </div>
+        <div class="field"><label>Factor Pot.</label><input type="number" id="eq-fp" value="0.9" step="0.01" min="0.1" max="1"></div>
+        <div class="field"><label>Fases</label>
+          <select id="eq-ph"><option value="1" selected>Monofásico</option><option value="3">Trifásico</option></select>
+        </div>
+        <div class="field" style="justify-content:flex-end"><button class="btn bb" onclick="addEquipo()">＋ Agregar</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sw" style="display:none">
+    <div class="stats">
+      <div class="stat"><span class="sl">Potencia Total</span><span class="sv" style="color:var(--fu)" id="st-kw">0.00</span><span class="su">kW</span></div>
+      <div class="stat"><span class="sl">Demanda Calc.</span><span class="sv" style="color:var(--ok)" id="st-dem">0.00</span><span class="su">kW (c/FS)</span></div>
+      <div class="stat"><span class="sl">Equipos</span><span class="sv" style="color:var(--wh)" id="st-eq">0</span><span class="su">registros</span></div>
+      <div class="stat"><span class="sl">Circuitos</span><span class="sv" style="color:var(--il)" id="st-ci">0</span><span class="su">generados</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph"><div class="dot dw"></div><h2>Lista de Equipos</h2></div>
+    <div id="eq-empty" class="empty"><div class="ei">⚡</div><p>Agrega el primer equipo arriba.</p></div>
+    <div id="eq-tw" style="display:none" class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Equipo</th><th>Tipo</th><th>Cant.</th><th>W/u</th><th>W Total</th><th>V</th><th>Corriente</th><th>FP</th><th>Fases</th><th></th></tr></thead>
+        <tbody id="eq-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div><!-- /eq -->
+
+<!-- ========== CIRCUITOS ========== -->
+<div class="sec" id="sec-ci">
+  <div class="alert ai">⚡ <span>Norma NEC Ecuador: Iluminación 14 AWG / 15A (carga máx. 80%=12A). Fuerza/Tom. 12 AWG / 20A (máx. 80%=16A). Especial: circuito dedicado calculado al 125%. Se aplica factor de simultaneidad y demanda (NEC Art. 220).</span></div>
+  <div id="ci-empty" class="empty"><div class="ei">🔌</div><p>Agrega equipos para generar circuitos.</p></div>
+  <div id="ci-cont" style="display:none">
+    <div id="acometida-card"></div>
+    <div id="cg"></div>
+  </div>
+</div>
+
+<!-- ========== MATERIALES ========== -->
+<div class="sec" id="sec-ma">
+  <div class="alert aw">⚠ <span>Materiales generados automáticamente desde los circuitos. Marca "IVA 15%" solo si el precio ingresado es sin IVA. Si ya está incluido, deja sin marcar.</span></div>
+  <div id="ma-empty" class="empty"><div class="ei">🔧</div><p>Agrega equipos para generar la lista.</p></div>
+  <div id="ma-cont" style="display:none">
+    <div class="mat-grid" id="mat-grid"></div>
+
+    <!-- EQUIPMENT PRICES -->
+    <div class="panel" style="margin-top:12px">
+      <div class="ph"><div class="dot di"></div><h2>Precios de Equipos / Electrodomésticos</h2></div>
+      <div class="pb">
+        <div class="alert ak" style="margin-bottom:12px">💡 <span>Ingresa el precio de cada equipo para incluirlo en el presupuesto total.</span></div>
+        <div class="eq-price-grid" id="eq-price-grid"></div>
+      </div>
+    </div>
+
+    <!-- EXTRAS -->
+    <div class="panel" style="margin-top:12px">
+      <div class="ph"><div class="dot dw"></div><h2>Materiales Adicionales</h2></div>
+      <div class="pb">
+        <div id="extras-list"></div>
+        <div class="fg" style="margin-top:12px">
+          <div class="field" style="min-width:180px"><label>Descripción</label><input id="ex-desc" placeholder="Tubo conduit, caja paso…"></div>
+          <div class="field"><label>Cantidad</label><input type="number" id="ex-qty" value="1" min="1"></div>
+          <div class="field"><label>P. Unitario ($)</label><input type="number" id="ex-price" placeholder="0.00" step="0.01" min="0"></div>
+          <div class="field">
+            <label>IVA</label>
+            <div style="display:flex;align-items:center;gap:5px;padding-top:6px">
+              <input type="checkbox" id="ex-iva" style="width:16px;height:16px">
+              <label for="ex-iva" style="font-size:.72rem;letter-spacing:0;color:var(--tx);text-transform:none;cursor:pointer">Aplicar 15%</label>
+            </div>
+          </div>
+          <div class="field" style="justify-content:flex-end"><button class="btn bo" onclick="addExtra()">＋ Agregar</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== RESUMEN ========== -->
+<div class="sec" id="sec-re">
+  <div id="re-cont">
+    <div class="empty"><div class="ei">📋</div><p>Agrega equipos para generar el resumen.</p></div>
+  </div>
+</div>
+
+</main>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let equipos=[], extras=[], matPrices={}, matIVA={}, cableMode={}, hiddenDiffs={}, equipPrices={};
+let validityDays=30, currentTipo='iluminacion';
+const SK='sestsa_v3';
+
+// ═══════════════════════════════════════
+// AWG TABLES (NEC with insulation types)
+// ═══════════════════════════════════════
+const AWG_FULL=[
+  {awg:'14 AWG',mm2:'2.5 mm²',TW:15, THW:15, THHN:15 },
+  {awg:'12 AWG',mm2:'4 mm²',  TW:20, THW:20, THHN:20 },
+  {awg:'10 AWG',mm2:'6 mm²',  TW:30, THW:30, THHN:30 },
+  {awg:'8 AWG', mm2:'10 mm²', TW:40, THW:50, THHN:55 },
+  {awg:'6 AWG', mm2:'16 mm²', TW:55, THW:65, THHN:75 },
+  {awg:'4 AWG', mm2:'25 mm²', TW:70, THW:85, THHN:95 },
+  {awg:'3 AWG', mm2:'35 mm²', TW:85, THW:100,THHN:115},
+  {awg:'2 AWG', mm2:'35 mm²', TW:95, THW:115,THHN:130},
+  {awg:'1 AWG', mm2:'50 mm²', TW:110,THW:130,THHN:145},
+  {awg:'1/0 AWG',mm2:'55 mm²',TW:125,THW:150,THHN:170},
+  {awg:'2/0 AWG',mm2:'70 mm²',TW:145,THW:175,THHN:195},
+  {awg:'3/0 AWG',mm2:'95 mm²',TW:165,THW:200,THHN:225},
+  {awg:'4/0 AWG',mm2:'120 mm²',TW:195,THW:230,THHN:260},
+];
+const BREAK_STD=[10,15,20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,175,200,225,250];
+const DIFF_STD=[{amp:25,ma:'30 mA'},{amp:40,ma:'30 mA'},{amp:63,ma:'30 mA'},{amp:80,ma:'30 mA'},{amp:100,ma:'100 mA'}];
+
+function insul(){return document.getElementById('insul')?.value||'THHN';}
+function simFactor(){return parseFloat(document.getElementById('sim-f')?.value||'0.8');}
+function instType(){return document.getElementById('inst-type')?.value||'res';}
+
+function getAWG(I){
+  const ins=insul();
+  const design=I*1.25;
+  return AWG_FULL.find(r=>r[ins]>=design)||AWG_FULL[AWG_FULL.length-1];
+}
+function getBreaker(I){
+  const need=I*1.25;
+  return BREAK_STD.find(b=>b>=need)||250;
+}
+function getDiff(br){
+  return DIFF_STD.find(d=>d.amp>=br)||DIFF_STD[DIFF_STD.length-1];
+}
+function calcI(watts,volts,fp,phases){
+  return phases==3?watts/(Math.sqrt(3)*volts*fp):watts/(volts*fp);
+}
+
+// ═══════════════════════════════════════
+// DEMAND CALCULATION (NEC Ecuador)
+// ═══════════════════════════════════════
+function calcDemand(){
+  const iT=instType();
+  const ilumW=equipos.filter(e=>e.tipo==='iluminacion').reduce((a,e)=>a+e.totalW,0);
+  const fuerzaW=equipos.filter(e=>e.tipo==='fuerza').reduce((a,e)=>a+e.totalW,0);
+  const especialArr=equipos.filter(e=>e.tipo==='especial').map(e=>e.totalW).sort((a,b)=>b-a);
+  const especialW=especialArr.reduce((a,w)=>a+w,0);
+
+  let ilumD, fuerzaD, espD;
+  if(iT==='res'){
+    // NEC Ecuador Art. 220.42: first 3000W @ 100%, rest @ 35%
+    ilumD=ilumW<=3000?ilumW:3000+(ilumW-3000)*0.35;
+    // NEC Art. 220.52: first 10 kVA @ 100%, rest @ 50%
+    fuerzaD=fuerzaW<=10000?fuerzaW:10000+(fuerzaW-10000)*0.5;
+    // Special: largest @ 100%, others @ 75% (NEC 220.82)
+    espD=especialArr.length>0?especialArr[0]+especialArr.slice(1).reduce((a,w)=>a+w*0.75,0):0;
+  } else if(iT==='com'){
+    // Commercial: 100% lighting, 100% first 20kVA receptacles then 50%
+    ilumD=ilumW;
+    fuerzaD=fuerzaW<=20000?fuerzaW:20000+(fuerzaW-20000)*0.5;
+    espD=especialW;
+  } else {
+    // Industrial: 100% all
+    ilumD=ilumW;fuerzaD=fuerzaW;espD=especialW;
+  }
+
+  const sf=simFactor();
+  const totalDemand=(ilumD+fuerzaD+espD)*sf;
+  return{totalDemand,ilumD,fuerzaD,espD,ilumW,fuerzaW,especialW,sf};
+}
+
+// Main service (acometida) sizing
+function calcAcometida(){
+  const d=calcDemand();
+  if(d.totalDemand<=0)return null;
+  // Determine dominant voltage for acometida
+  const volt=equipos.length>0?(equipos[0].volts||220):220;
+  const fp=0.9;
+  const mainI=d.totalDemand/(volt*fp);
+  const awg=getAWG(mainI);
+  const breaker=getBreaker(mainI);
+  return{...d,volt,mainI,awg,breaker};
+}
+
+// ═══════════════════════════════════════
+// CIRCUIT GENERATION
+// ═══════════════════════════════════════
+const ILUM_AWG={awg:'14 AWG',mm2:'2.5 mm²'};
+const FUER_AWG={awg:'12 AWG',mm2:'4 mm²'};
+
+function generateCircuits(){
+  const circs=[];
+  let num=1;
+  const ins=insul();
+  const ilumMax=AWG_FULL.find(r=>r.awg==='14 AWG')[ins]; // 15A for all types
+  const fuMax=AWG_FULL.find(r=>r.awg==='12 AWG')[ins];   // 20A
+
+  const makeC=(tipo,awg,breaker,maxA,volts)=>{
+    const diff=getDiff(breaker);
+    return{id:`C-${String(num++).padStart(3,'0')}`,tipo,awg,breaker,diff,maxA,volts,items:[],totalA:0,totalW:0};
+  };
+
+  const pack=(list,tipo,capA,awg,breakerA)=>{
+    const limitA=capA*0.8; // 80% NEC load limit
+    let cur=null;
+    list.forEach(eq=>{
+      const ipu=eq.qty>0?eq.I/eq.qty:0;
+      let rem=eq.qty;
+      while(rem>0){
+        if(!cur) cur=makeC(tipo,awg,breakerA,limitA,eq.volts);
+        const space=cur.maxA-cur.totalA;
+        const fit=ipu>0.001?Math.floor(space/ipu):rem;
+        const add=Math.min(Math.max(fit,0),rem);
+        if(add>0){
+          cur.items.push({name:eq.name,qty:add,watts:eq.watts,totalW:eq.watts*add,I:ipu*add,ipu});
+          cur.totalA+=ipu*add;cur.totalW+=eq.watts*add;rem-=add;
+        }
+        if(add<=0||rem>0){
+          if(cur.items.length>0)circs.push(cur);
+          cur=null;
+          if(ipu>limitA){
+            // oversized: dedicated upgraded circuit
+            const ua=getAWG(ipu),ub=getBreaker(ipu);
+            cur=makeC(tipo,ua,ub,ipu*1.25,eq.volts);
+          }
+        }
+      }
+    });
+    if(cur&&cur.items.length>0)circs.push(cur);
+  };
+
+  // Special → dedicated circuits
+  equipos.filter(e=>e.tipo==='especial').forEach(eq=>{
+    const awg=getAWG(eq.I),br=getBreaker(eq.I),diff=getDiff(br);
+    const c=makeC('especial',awg,br,eq.I*1.25,eq.volts);
+    c.items.push({name:eq.name,qty:eq.qty,watts:eq.watts,totalW:eq.totalW,I:eq.I,ipu:eq.I/eq.qty});
+    c.totalA=eq.I;c.totalW=eq.totalW;
+    circs.push(c);
+  });
+
+  // Iluminación
+  pack(equipos.filter(e=>e.tipo==='iluminacion'),'iluminacion',ilumMax,ILUM_AWG,15);
+
+  // Fuerza
+  pack(equipos.filter(e=>e.tipo==='fuerza'),'fuerza',fuMax,FUER_AWG,20);
+
+  return circs;
+}
+
+// ═══════════════════════════════════════
+// TIPO SELECTOR (FIXED)
+// ═══════════════════════════════════════
+function selTipo(el){
+  const opt=el.closest?el.closest('.to'):el;
+  if(!opt)return;
+  const t=opt.dataset.tipo;
+  if(!t)return;
+  document.querySelectorAll('.to').forEach(o=>o.className='to');
+  opt.classList.add(t==='iluminacion'?'sil':t==='fuerza'?'sfu':'ses');
+  currentTipo=t;
+}
+
+// ═══════════════════════════════════════
+// ADD / REMOVE EQUIPO
+// ═══════════════════════════════════════
+function addEquipo(){
+  const name=document.getElementById('eq-name').value.trim();
+  const watts=parseFloat(document.getElementById('eq-w').value);
+  const qty=parseInt(document.getElementById('eq-qty').value)||1;
+  const volts=parseFloat(document.getElementById('eq-v').value);
+  const fp=parseFloat(document.getElementById('eq-fp').value)||0.9;
+  const phases=parseInt(document.getElementById('eq-ph').value);
+  if(!name||isNaN(watts)||watts<=0){alert('Completa nombre y potencia.');return;}
+  const totalW=watts*qty;
+  const I=calcI(totalW,volts,fp,phases);
+  equipos.push({id:Date.now(),name,tipo:currentTipo,watts,qty,totalW,volts,fp,phases,I});
+  document.getElementById('eq-name').value='';
+  document.getElementById('eq-w').value='';
+  document.getElementById('eq-qty').value='1';
+  renderEquipos();updateStats();ss();
+}
+
+function removeEquipo(id){
+  equipos=equipos.filter(e=>e.id!==id);
+  delete equipPrices[id];
+  renderEquipos();updateStats();ss();
+}
+
+// ═══════════════════════════════════════
+// RENDER EQUIPOS
+// ═══════════════════════════════════════
+const tipoTag={iluminacion:'<span class="tag ti">💡 Ilum.</span>',fuerza:'<span class="tag tf">🔌 Fuerza</span>',especial:'<span class="tag te">⚡ Especial</span>'};
+
+function renderEquipos(){
+  const empty=document.getElementById('eq-empty');
+  const wrap=document.getElementById('eq-tw');
+  const sw=document.getElementById('sw');
+  if(!equipos.length){empty.style.display='';wrap.style.display='none';sw.style.display='none';document.getElementById('nb-eq').textContent='0';return;}
+  empty.style.display='none';wrap.style.display='';sw.style.display='';
+  document.getElementById('nb-eq').textContent=equipos.length;
+  document.getElementById('eq-tbody').innerHTML=equipos.map((e,i)=>`
+    <tr>
+      <td style="color:var(--mu)">${i+1}</td>
+      <td class="nm">${e.name}</td>
+      <td>${tipoTag[e.tipo]}</td>
+      <td>${e.qty}</td>
+      <td>${e.watts.toLocaleString()}</td>
+      <td style="color:var(--fu)">${e.totalW.toLocaleString()}</td>
+      <td><span class="tag tf">${e.volts}V</span></td>
+      <td style="color:var(--il)">${e.I.toFixed(2)} A</td>
+      <td style="color:var(--mu)">${e.fp}</td>
+      <td><span class="tag ${e.phases===3?'ti':'tg'}">${e.phases===3?'3Φ':'1Φ'}</span></td>
+      <td><button class="btn bd" onclick="removeEquipo(${e.id})">✕</button></td>
+    </tr>`).join('');
+}
+
+function updateStats(){
+  const tw=equipos.reduce((a,e)=>a+e.totalW,0);
+  const d=calcDemand();
+  const ci=generateCircuits();
+  document.getElementById('st-kw').textContent=(tw/1000).toFixed(2);
+  document.getElementById('st-dem').textContent=(d.totalDemand/1000).toFixed(2);
+  document.getElementById('st-eq').textContent=equipos.length;
+  document.getElementById('st-ci').textContent=ci.length;
+  document.getElementById('nb-ci').textContent=ci.length;
+}
+
+// ═══════════════════════════════════════
+// RENDER CIRCUITS
+// ═══════════════════════════════════════
+function renderCircuits(){
+  const circs=generateCircuits();
+  const empty=document.getElementById('ci-empty');
+  const cont=document.getElementById('ci-cont');
+  if(!circs.length){empty.style.display='';cont.style.display='none';return;}
+  empty.style.display='none';cont.style.display='';
+
+  // Acometida
+  const ac=calcAcometida();
+  const acDiv=document.getElementById('acometida-card');
+  if(ac){
+    const d=ac;
+    const iIns=insul();
+    acDiv.innerHTML=`
+    <div class="pac-card">
+      <div class="pac-title">🏠 Acometida — Medidor → Tablero Principal</div>
+      <div class="pac-grid">
+        <div class="pac-item"><div class="pac-lbl">Demanda Total</div><div class="pac-val">${(d.totalDemand/1000).toFixed(2)} kW</div><div class="pac-sub">Factor FS: ${d.sf}</div></div>
+        <div class="pac-item"><div class="pac-lbl">Corriente Acometida</div><div class="pac-val">${d.mainI.toFixed(2)} A</div><div class="pac-sub">@ ${d.volt}V, fp=0.9</div></div>
+        <div class="pac-item"><div class="pac-lbl">Cable (${iIns})</div><div class="pac-val">${d.awg.awg}</div><div class="pac-sub">${d.awg.mm2} · ${d.awg[iIns]}A ampac.</div></div>
+        <div class="pac-item"><div class="pac-lbl">Interruptor Gral.</div><div class="pac-val">${d.breaker} A</div><div class="pac-sub">Termomagético principal</div></div>
+      </div>
+      <div class="dembox" style="margin-top:10px">
+        <div class="demtit">Desglose Factores de Demanda (NEC Ecuador)</div>
+        <div class="demrow"><span>Iluminación (bruto)</span><span>${d.ilumW.toLocaleString()} W</span></div>
+        <div class="demrow"><span>Iluminación (con factor)</span><span>${d.ilumD.toFixed(0)} W</span></div>
+        <div class="demrow"><span>Fuerza/Tom. (bruto)</span><span>${d.fuerzaW.toLocaleString()} W</span></div>
+        <div class="demrow"><span>Fuerza/Tom. (con factor)</span><span>${d.fuerzaD.toFixed(0)} W</span></div>
+        <div class="demrow"><span>Cargas especiales</span><span>${d.espD.toFixed(0)} W</span></div>
+        <div class="demrow" style="border-top:1px solid rgba(39,232,167,.2);padding-top:6px;margin-top:4px;color:var(--ok);font-weight:600"><span>Demanda total × FS ${d.sf}</span><span>${(d.totalDemand/1000).toFixed(2)} kW</span></div>
+      </div>
+    </div>`;
+  }
+
+  const tLabel={iluminacion:'Iluminación',fuerza:'Fuerza / Tomacorrientes',especial:'Especial / Potencia'};
+  const tCol={iluminacion:'pi',fuerza:'pf',especial:'pe'};
+
+  document.getElementById('cg').innerHTML=circs.map(c=>{
+    const col=tCol[c.tipo];
+    const hasDiff=!hiddenDiffs['D_'+c.id];
+    return`<div class="cc c${c.tipo.substring(0,2)} ${c.tipo==='especial'?'ces':''}">
+      <div class="ch">
+        <span class="cid">${c.id} — ${tLabel[c.tipo]}</span>
+        <div class="csp">
+          <span class="tag ${c.tipo==='iluminacion'?'ti':c.tipo==='fuerza'?'tf':'te'}">${c.awg.awg}</span>
+          <span class="tag tg">${c.totalA.toFixed(2)} A</span>
+        </div>
+      </div>
+      <div class="cb">
+        <div class="citems">${c.items.map(it=>`<div class="cit"><span class="cn">${it.name}${it.qty>1?` ×${it.qty}`:''}</span><span class="cv">${it.totalW.toLocaleString()} W · ${it.I.toFixed(2)} A</span></div>`).join('')}</div>
+        <div class="cprot">
+          <div class="pb2"><div class="pico">🔒</div><div class="plbl">Cable</div><div class="pval ${col}">${c.awg.awg}<br><span style="font-size:.65rem;color:var(--mu)">${c.awg.mm2}</span></div></div>
+          <div class="pb2"><div class="pico">⚡</div><div class="plbl">Termomagético</div><div class="pval ${col}">${c.breaker} A<br><span style="font-size:.65rem;color:var(--mu)">${c.volts}V</span></div></div>
+          ${hasDiff?`<div class="pb2"><div class="pico">🛡</div><div class="plbl">Diferencial</div><div class="pval pg">${c.diff.amp}A/${c.diff.ma}</div></div>`:''}
+          <div class="pb2"><div class="pico">📊</div><div class="plbl">Utilización</div><div class="pval" style="color:${c.totalA/c.maxA>.9?'var(--es)':'var(--ok)'}">${Math.round(c.totalA/c.maxA*100)}%<br><span style="font-size:.65rem;color:var(--mu)">${c.totalA.toFixed(1)}/${c.maxA.toFixed(1)}A</span></div></div>
+        </div>
+      </div>
+    </div>`;}).join('');
+}
+
+// ═══════════════════════════════════════
+// MATERIALS
+// ═══════════════════════════════════════
+function getMatItems(){
+  const circs=generateCircuits();
+  const cables={},breakers={},diffs={};
+  circs.forEach(c=>{
+    const ck='CABLE_'+c.awg.awg.replace(/ /g,'_');
+    if(!cables[ck])cables[ck]={awg:c.awg.awg,mm2:c.awg.mm2,count:0};
+    cables[ck].count++;
+    const bk='TERM_'+c.breaker;
+    if(!breakers[bk])breakers[bk]={amp:c.breaker,count:0};
+    breakers[bk].count++;
+    if(!hiddenDiffs['DIFF_'+c.diff.amp+'_'+c.diff.ma]){
+      const dk='DIFF_'+c.diff.amp;
+      if(!diffs[dk])diffs[dk]={amp:c.diff.amp,ma:c.diff.ma,count:0};
+      diffs[dk].count++;
+    }
+  });
+  return{cables,breakers,diffs};
+}
+
+function buildMaterials(){
+  const empty=document.getElementById('ma-empty');
+  const cont=document.getElementById('ma-cont');
+  if(!equipos.length){empty.style.display='';cont.style.display='none';return;}
+  empty.style.display='none';cont.style.display='';
+
+  const{cables,breakers,diffs}=getMatItems();
+
+  const secWrap=(title,dot,rows)=>`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden">
+      <div class="ph"><div class="dot ${dot}"></div><h2>${title}</h2></div>
+      <div class="pb">${rows}</div>
+    </div>`;
+
+  // CABLES with mode toggle
+  let cRows=Object.entries(cables).map(([k,c])=>{
+    const p=matPrices[k]||'';
+    const iva=matIVA[k]||0;
+    const mode=cableMode[k]?.mode||'metro';
+    const rsize=cableMode[k]?.rollSize||100;
+    return`<div class="pr">
+      <div class="pl">${c.awg} <small>${c.mm2} · ${c.count} circuito(s)</small>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap">
+          <div class="mode-toggle">
+            <button class="mt-btn ${mode==='metro'?'active':''}" onclick="setCableMode('${k}','metro',this)">$/metro</button>
+            <button class="mt-btn ${mode==='rollo'?'active':''}" onclick="setCableMode('${k}','rollo',this)">$/rollo</button>
+          </div>
+          ${mode==='rollo'?`<div class="roll-w"><span>Rollo:</span><input type="number" data-rollkey="${k}" value="${rsize}" min="1" style="width:52px;text-align:center" onchange="setRollSize('${k}',this.value)"><span>m</span></div>`:''}
+        </div>
+      </div>
+      <div class="pw">
+        <div class="iva-row">
+          <input type="checkbox" data-ivakey="${k}" ${iva>0?'checked':''} onchange="saveIVA(this,'${k}')">
+          <span>IVA 15%</span>
+        </div>
+        <span class="cur">$</span>
+        <input type="number" data-key="${k}" value="${p}" placeholder="0.00" step="0.01" min="0" onchange="savePrice(this)" style="width:80px;text-align:right">
+      </div>
+    </div>`;}).join('');
+
+  // BREAKERS
+  let bRows=Object.entries(breakers).map(([k,b])=>{
+    const p=matPrices[k]||'';const iva=matIVA[k]||0;
+    return`<div class="pr">
+      <div class="pl">Termomagético ${b.amp}A <small>${b.count} unidad(es) · precio/pieza</small></div>
+      <div class="pw">
+        <div class="iva-row"><input type="checkbox" ${iva>0?'checked':''} onchange="saveIVA(this,'${k}')"><span>IVA 15%</span></div>
+        <span class="cur">$</span>
+        <input type="number" data-key="${k}" value="${p}" placeholder="0.00" step="0.01" min="0" onchange="savePrice(this)" style="width:80px;text-align:right">
+      </div>
+    </div>`;}).join('');
+
+  // DIFFERENTIALS with X button
+  let dRows=Object.entries(diffs).map(([k,d])=>{
+    if(hiddenDiffs[k]) return '';
+    const p=matPrices[k]||'';const iva=matIVA[k]||0;
+    return`<div class="pr" id="drow-${k}">
+      <div class="pl">Diferencial ${d.amp}A / ${d.ma} <small>${d.count} unidad(es) · precio/pieza</small></div>
+      <div class="pw" style="align-items:center;gap:8px">
+        <div class="iva-row"><input type="checkbox" ${iva>0?'checked':''} onchange="saveIVA(this,'${k}')"><span>IVA 15%</span></div>
+        <span class="cur">$</span>
+        <input type="number" data-key="${k}" value="${p}" placeholder="0.00" step="0.01" min="0" onchange="savePrice(this)" style="width:80px;text-align:right">
+        <button class="btn bd" title="Quitar diferencial de este proyecto" onclick="hideDiff('${k}')" style="padding:3px 7px;font-size:.65rem">✕</button>
+      </div>
+    </div>`;}).join('')||'<div style="color:var(--mu);font-size:.76rem;padding:6px 0">No hay diferenciales activos. Se pueden activar recargando materiales.</div>';
+
+  const grid=document.getElementById('mat-grid');
+  grid.innerHTML=secWrap('Cables',  'df', cRows||'<div style="color:var(--mu);font-size:.76rem">Sin cables</div>')+
+                 secWrap('Termomagéticos','di',bRows||'<div style="color:var(--mu);font-size:.76rem">Sin termomagéticos</div>')+
+                 secWrap('Diferenciales (Disyuntores)','de',dRows);
+
+  // Equipment prices
+  buildEquipPrices();
+  renderExtras();
+}
+
+function hideDiff(key){
+  readAllPrices();
+  hiddenDiffs[key]=true;
+  ss();
+  buildMaterials();
+}
+
+function setCableMode(key,mode,btn){
+  if(!cableMode[key]) cableMode[key]={mode:'metro',rollSize:100};
+  cableMode[key].mode=mode;
+  ss();buildMaterials();
+}
+
+function setRollSize(key,val){
+  if(!cableMode[key]) cableMode[key]={mode:'rollo',rollSize:100};
+  cableMode[key].rollSize=parseInt(val)||100;
+  ss();
+}
+
+function buildEquipPrices(){
+  const g=document.getElementById('eq-price-grid');
+  if(!equipos.length){g.innerHTML='<div style="color:var(--mu);font-size:.76rem">Agrega equipos primero.</div>';return;}
+  g.innerHTML=equipos.map(e=>{
+    const ep=equipPrices[e.id]||{price:'',iva:0};
+    return`<div class="epr">
+      <span class="en">${e.name} (×${e.qty})</span>
+      <div class="epr-right">
+        <div class="iva-row"><input type="checkbox" ${ep.iva>0?'checked':''} onchange="saveEqIVA(${e.id},this)"><span>IVA</span></div>
+        <span class="cur">$</span>
+        <input type="number" data-eqid="${e.id}" value="${ep.price}" placeholder="0.00" step="0.01" min="0" onchange="saveEqPrice(${e.id},this)" style="width:75px;text-align:right">
+      </div>
+    </div>`;}).join('');
+}
+
+function savePrice(el){matPrices[el.dataset.key]=parseFloat(el.value)||0;ss();}
+function saveIVA(el,key){matIVA[key]=el.checked?15:0;ss();}
+function saveEqPrice(id,el){if(!equipPrices[id])equipPrices[id]={price:0,iva:0};equipPrices[id].price=parseFloat(el.value)||0;ss();}
+function saveEqIVA(id,el){if(!equipPrices[id])equipPrices[id]={price:0,iva:0};equipPrices[id].iva=el.checked?15:0;ss();}
+
+function readAllPrices(){
+  document.querySelectorAll('[data-key]').forEach(el=>{matPrices[el.dataset.key]=parseFloat(el.value)||0;});
+  document.querySelectorAll('[data-ivakey]').forEach(el=>{matIVA[el.dataset.ivakey]=el.checked?15:0;});
+  document.querySelectorAll('[data-eqid]').forEach(el=>{
+    const id=parseInt(el.dataset.eqid);
+    if(!equipPrices[id])equipPrices[id]={price:0,iva:0};
+    equipPrices[id].price=parseFloat(el.value)||0;
+  });
+  document.querySelectorAll('[data-rollkey]').forEach(el=>{
+    const k=el.dataset.rollkey;
+    if(!cableMode[k])cableMode[k]={mode:'metro',rollSize:100};
+    cableMode[k].rollSize=parseInt(el.value)||100;
+  });
+}
+
+// ═══════════════════════════════════════
+// EXTRAS
+// ═══════════════════════════════════════
+function addExtra(){
+  const desc=document.getElementById('ex-desc').value.trim();
+  const qty=parseFloat(document.getElementById('ex-qty').value)||1;
+  const price=parseFloat(document.getElementById('ex-price').value)||0;
+  const iva=document.getElementById('ex-iva').checked?15:0;
+  if(!desc){alert('Ingresa descripción.');return;}
+  extras.push({id:Date.now(),desc,qty,price,iva});
+  document.getElementById('ex-desc').value='';document.getElementById('ex-qty').value='1';
+  document.getElementById('ex-price').value='';document.getElementById('ex-iva').checked=false;
+  renderExtras();ss();
+}
+function removeExtra(id){extras=extras.filter(e=>e.id!==id);renderExtras();ss();}
+function renderExtras(){
+  const el=document.getElementById('extras-list');
+  if(!el)return;
+  if(!extras.length){el.innerHTML='';return;}
+  el.innerHTML=`<div class="tbl-wrap"><table class="tbl" style="margin-bottom:10px">
+    <thead><tr><th>#</th><th>Descripción</th><th>Cant.</th><th>P. Unit</th><th>IVA</th><th>Subtotal</th><th></th></tr></thead>
+    <tbody>${extras.map((e,i)=>{
+      const sub=e.qty*e.price;
+      const ivaAmt=e.iva?sub*(e.iva/100):0;
+      return`<tr><td style="color:var(--mu)">${i+1}</td><td class="nm">${e.desc}</td>
+        <td>${e.qty}</td><td>$${e.price.toFixed(2)}</td>
+        <td style="color:var(--il)">${e.iva?e.iva+'%':'—'}</td>
+        <td style="color:var(--ok)">$${(sub+ivaAmt).toFixed(2)}</td>
+        <td><button class="btn bd" onclick="removeExtra(${e.id})">✕</button></td>
+      </tr>`;}).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+// ═══════════════════════════════════════
+// VALIDITY
+// ═══════════════════════════════════════
+function setValidity(days,el){
+  validityDays=days;
+  document.querySelectorAll('.vopt').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  updateExpiry();ss();
+}
+function updateExpiry(){
+  const dateVal=document.getElementById('pj-date')?.value;
+  if(!dateVal){document.getElementById('expiry-lbl').textContent='';return;}
+  const d=new Date(dateVal);
+  d.setDate(d.getDate()+validityDays);
+  document.getElementById('expiry-lbl').textContent=`Vence: ${d.toLocaleDateString('es-EC',{day:'2-digit',month:'long',year:'numeric'})}`;
+}
+function getExpiry(){
+  const dateVal=document.getElementById('pj-date')?.value;
+  if(!dateVal)return '';
+  const d=new Date(dateVal);
+  d.setDate(d.getDate()+validityDays);
+  return d.toLocaleDateString('es-EC',{day:'2-digit',month:'long',year:'numeric'});
+}
+
+// ═══════════════════════════════════════
+// RESUMEN
+// ═══════════════════════════════════════
+function buildResumen(){
+  const cont=document.getElementById('re-cont');
+  if(!equipos.length){cont.innerHTML=`<div class="empty"><div class="ei">📋</div><p>Agrega equipos para generar el resumen.</p></div>`;return;}
+  readAllPrices();
+
+  const circs=generateCircuits();
+  const{cables,breakers,diffs}=getMatItems();
+  const ac=calcAcometida();
+  const totalW=equipos.reduce((a,e)=>a+e.totalW,0);
+  const pj=getProjData();
+  const expDate=getExpiry();
+
+  // Build material rows
+  let matRows=[],subtotalBase=0,totalIVA=0;
+  const addRow=(tipo,desc,qty,unit,up,ivaP,note='')=>{
+    const sub=up*qty;
+    const ivaAmt=ivaP?sub*(ivaP/100):0;
+    subtotalBase+=sub;totalIVA+=ivaAmt;
+    matRows.push({tipo,desc,qty,unit,up,sub,ivaP,ivaAmt,note});
+  };
+
+  Object.entries(cables).forEach(([k,c])=>{
+    const up=matPrices[k]||0;
+    const mode=cableMode[k]?.mode||'metro';
+    const rsize=cableMode[k]?.rollSize||100;
+    const metros=c.count*15;
+    const iva=matIVA[k]||0;
+    if(mode==='rollo'){
+      const rollos=Math.ceil(metros/rsize);
+      addRow('Cable',`${c.awg} (${c.mm2})`,rollos,'rollos',up,iva,`${rollos} rollo(s) de ${rsize}m ≈ ${metros}m`);
+    } else {
+      addRow('Cable',`${c.awg} (${c.mm2})`,metros,'m',up,iva,'15m/circuito est.');
+    }
+  });
+
+  Object.entries(breakers).forEach(([k,b])=>{
+    addRow('Termomag.',`Termomagético ${b.amp}A`,b.count,'u',matPrices[k]||0,matIVA[k]||0,'');
+  });
+  Object.entries(diffs).forEach(([k,d])=>{
+    if(!hiddenDiffs[k]) addRow('Diferencial',`Diferencial ${d.amp}A/${d.ma}`,d.count,'u',matPrices[k]||0,matIVA[k]||0,'');
+  });
+
+  // Acometida row (cable only)
+  if(ac){
+    const acKey='CABLE_'+ac.awg.awg.replace(/ /g,'_');
+    const up=matPrices[acKey]||0;
+    const iva=matIVA[acKey]||0;
+    // Don't double-count; just note it
+  }
+
+  equipos.forEach(e=>{
+    const ep=equipPrices[e.id]||{price:0,iva:0};
+    if(ep.price>0) addRow('Equipo',`${e.name} (×${e.qty})`,1,'u',ep.price,ep.iva||0,'');
+  });
+  extras.forEach(e=>{addRow('Adicional',e.desc,e.qty,'u',e.price,e.iva||0,'');});
+
+  const grandTotal=subtotalBase+totalIVA;
+
+  const matTipoTag={Cable:'<span class="tag tf">Cable</span>','Termomag.':'<span class="tag ti">Termomag.</span>',Diferencial:'<span class="tag te">Diferencial</span>',Equipo:'<span class="tag ti">Equipo</span>',Adicional:'<span class="tag tg">Adicional</span>'};
+
+  cont.innerHTML=`
+  <div class="panel">
+    <div class="ph"><div class="dot df"></div><h2>Datos del Proyecto</h2></div>
+    <div class="pb"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px">
+      ${[['Proyecto',pj.name],['Cliente',pj.client],['Dirección',pj.addr],['Fecha',pj.date],['Elaborado por',pj.by],['Válido hasta',expDate]].map(([l,v])=>`<div><div class="sl">${l}</div><div style="color:var(--wh);font-weight:600;margin-top:3px;font-size:.85rem">${v||'—'}</div></div>`).join('')}
+    </div></div>
+  </div>
+
+  <div class="panel">
+    <div class="ph"><div class="dot dw"></div><h2>Equipos Eléctricos</h2></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>#</th><th>Equipo</th><th>Tipo</th><th>Cant.</th><th>W Total</th><th>Voltaje</th><th>Corriente</th><th>Cable</th><th>Termomag.</th><th>Diferencial</th></tr></thead>
+      <tbody>
+        ${equipos.map((e,i)=>{
+          const awg=e.tipo==='iluminacion'?ILUM_AWG:e.tipo==='fuerza'?FUER_AWG:getAWG(e.I);
+          const br=e.tipo==='iluminacion'?15:e.tipo==='fuerza'?20:getBreaker(e.I);
+          const df=getDiff(br);
+          return`<tr><td style="color:var(--mu)">${i+1}</td><td class="nm">${e.name}</td><td>${tipoTag[e.tipo]}</td>
+            <td>${e.qty}</td><td style="color:var(--fu)">${e.totalW.toLocaleString()} W</td>
+            <td>${e.volts}V</td><td style="color:var(--il)">${e.I.toFixed(2)} A</td>
+            <td><span class="tag tf">${awg.awg}</span></td>
+            <td><span class="tag ti">${br} A</span></td>
+            <td><span class="tag tg">${df.amp}A/${df.ma}</span></td>
+          </tr>`;}).join('')}
+        <tr style="background:rgba(59,158,255,.05)">
+          <td colspan="3" style="font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--wh)">TOTAL</td>
+          <td>${equipos.reduce((a,e)=>a+e.qty,0)}</td>
+          <td style="color:var(--fu);font-weight:700">${totalW.toLocaleString()} W / ${(totalW/1000).toFixed(2)} kW</td>
+          <td colspan="5"></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  ${ac?`<div class="pac-card">
+    <div class="pac-title">🏠 Acometida — Medidor → Tablero Principal</div>
+    <div class="pac-grid">
+      <div class="pac-item"><div class="pac-lbl">Demanda Total</div><div class="pac-val">${(ac.totalDemand/1000).toFixed(2)} kW</div><div class="pac-sub">FS: ${ac.sf} · NEC Ec.</div></div>
+      <div class="pac-item"><div class="pac-lbl">Corriente Principal</div><div class="pac-val">${ac.mainI.toFixed(2)} A</div><div class="pac-sub">@${ac.volt}V</div></div>
+      <div class="pac-item"><div class="pac-lbl">Cable Acometida</div><div class="pac-val">${ac.awg.awg}</div><div class="pac-sub">${ac.awg.mm2}</div></div>
+      <div class="pac-item"><div class="pac-lbl">Interruptor Gral.</div><div class="pac-val">${ac.breaker} A</div><div class="pac-sub">Termomagético Ppal.</div></div>
+    </div>
+  </div>`:''}
+
+  <div class="panel">
+    <div class="ph"><div class="dot df"></div><h2>Circuitos</h2></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>ID</th><th>Tipo</th><th>Equipos</th><th>Carga</th><th>Cable</th><th>Termomag.</th><th>Diferencial</th><th>%</th></tr></thead>
+      <tbody>${circs.map(c=>`<tr>
+        <td style="color:var(--wh);font-weight:600">${c.id}</td>
+        <td>${tipoTag[c.tipo]}</td>
+        <td style="font-size:.7rem;color:var(--tx)">${c.items.map(i=>i.name+(i.qty>1?`×${i.qty}`:'')).join(', ')}</td>
+        <td style="color:var(--il)">${c.totalA.toFixed(2)} A</td>
+        <td><span class="tag tf">${c.awg.awg}</span></td>
+        <td><span class="tag ti">${c.breaker} A</span></td>
+        <td><span class="tag tg">${c.diff.amp}A/${c.diff.ma}</span></td>
+        <td style="color:${c.totalA/c.maxA>.9?'var(--es)':'var(--ok)'}">${Math.round(c.totalA/c.maxA*100)}%</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>
+
+  <div class="panel">
+    <div class="ph"><div class="dot di"></div><h2>Presupuesto de Materiales</h2></div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>#</th><th>Tipo</th><th>Descripción</th><th>Cant.</th><th>Unid.</th><th>P. Unitario</th><th>Subtotal</th><th>IVA</th><th>Total c/IVA</th></tr></thead>
+      <tbody>
+        ${matRows.length===0?`<tr><td colspan="9" style="text-align:center;padding:18px;color:var(--mu)">Sin precios — ir a Materiales</td></tr>`:
+        matRows.map((r,i)=>`<tr>
+          <td style="color:var(--mu)">${i+1}</td>
+          <td>${matTipoTag[r.tipo]||r.tipo}</td>
+          <td class="nm">${r.desc}${r.note?`<br><span style="font-size:.65rem;color:var(--mu)">${r.note}</span>`:''}</td>
+          <td>${r.qty}</td><td style="color:var(--mu)">${r.unit}</td>
+          <td>$${r.up.toFixed(2)}</td>
+          <td style="color:var(--tx)">$${r.sub.toFixed(2)}</td>
+          <td style="color:${r.ivaAmt>0?'var(--il)':'var(--mu)'}">${r.ivaAmt>0?'$'+r.ivaAmt.toFixed(2)+'  ('+r.ivaP+'%)':'—'}</td>
+          <td style="color:var(--ok)">$${(r.sub+r.ivaAmt).toFixed(2)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+    <div style="padding:14px 16px;border-top:1px solid var(--border)">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:300px;margin-left:auto">
+        <div style="display:flex;justify-content:space-between;width:100%;font-size:.82rem"><span style="color:var(--mu)">Subtotal (sin IVA)</span><span style="font-family:'DM Mono',monospace;color:var(--tx)">$${subtotalBase.toFixed(2)}</span></div>
+        ${totalIVA>0?`<div style="display:flex;justify-content:space-between;width:100%;font-size:.82rem"><span style="color:var(--il)">Impuesto IVA (15%)</span><span style="font-family:'DM Mono',monospace;color:var(--il)">$${totalIVA.toFixed(2)}</span></div>`:''}
+        <div style="display:flex;justify-content:space-between;width:100%;padding-top:8px;border-top:1px solid var(--border);font-size:1rem;font-weight:700">
+          <span style="color:var(--wh);font-family:'Rajdhani',sans-serif;letter-spacing:1px;text-transform:uppercase">TOTAL</span>
+          <span style="font-family:'DM Mono',monospace;color:var(--fu);font-size:1.3rem">$${grandTotal.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn ba" onclick="generatePDF()">📄 Generar PDF Profesional</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function gotoTab(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='ci'){readAllPrices();renderCircuits();}
+  if(id==='ma'){readAllPrices();buildMaterials();}
+  if(id==='re'){readAllPrices();buildResumen();}
+}
+
+// ═══════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════
+function ss(){
+  try{
+    const data={
+      proj:{name:v('pj-name'),client:v('pj-client'),addr:v('pj-addr'),date:v('pj-date'),by:v('pj-by')},
+      equipos,extras,matPrices,matIVA,cableMode,hiddenDiffs,equipPrices,validityDays,
+      insul:v('insul'),simF:v('sim-f'),instType:v('inst-type')
+    };
+    localStorage.setItem(SK,JSON.stringify(data));
+    const ind=document.getElementById('si');
+    ind.classList.add('show');
+    clearTimeout(window._siT);
+    window._siT=setTimeout(()=>ind.classList.remove('show'),2000);
+  }catch(e){}
+}
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(SK);
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    if(d.proj){
+      sv('pj-name',d.proj.name||'');sv('pj-client',d.proj.client||'');
+      sv('pj-addr',d.proj.addr||'');sv('pj-date',d.proj.date||today());
+      sv('pj-by',d.proj.by||'');
+    }
+    if(d.insul) sv('insul',d.insul);
+    if(d.simF) sv('sim-f',d.simF);
+    if(d.instType) sv('inst-type',d.instType);
+    equipos=d.equipos||[];extras=d.extras||[];matPrices=d.matPrices||{};
+    matIVA=d.matIVA||{};cableMode=d.cableMode||{};hiddenDiffs=d.hiddenDiffs||{};
+    equipPrices=d.equipPrices||{};validityDays=d.validityDays||30;
+    // Restore validity button
+    document.querySelectorAll('.vopt').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.vopt').forEach(b=>{if(b.textContent.includes(validityDays+' d'))b.classList.add('active');});
+    renderEquipos();updateStats();renderExtras();updateExpiry();
+  }catch(e){console.warn('loadState:',e);}
+}
+
+function confirmClear(){
+  if(confirm('¿Borrar TODOS los datos? Esta acción no se puede deshacer.')){
+    equipos=[];extras=[];matPrices={};matIVA={};cableMode={};hiddenDiffs={};equipPrices={};validityDays=30;
+    localStorage.removeItem(SK);
+    ['pj-name','pj-client','pj-addr','pj-by'].forEach(id=>sv(id,''));
+    sv('pj-date',today());
+    renderEquipos();updateStats();
+    document.getElementById('re-cont').innerHTML=`<div class="empty"><div class="ei">📋</div><p>Agrega equipos para ver el resumen.</p></div>`;
+    document.getElementById('ci-empty').style.display='';document.getElementById('ci-cont').style.display='none';
+    document.getElementById('ma-empty').style.display='';document.getElementById('ma-cont').style.display='none';
+  }
+}
+
+function v(id){return document.getElementById(id)?.value||'';}
+function sv(id,val){const el=document.getElementById(id);if(el)el.value=val;}
+function today(){return new Date().toISOString().split('T')[0];}
+function getProjData(){return{name:v('pj-name'),client:v('pj-client'),addr:v('pj-addr'),date:v('pj-date'),by:v('pj-by')};}
+
+// ═══════════════════════════════════════
+// PDF — PROFESSIONAL DESIGN
+// ═══════════════════════════════════════
+function generatePDF(){
+  readAllPrices();
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,H=297,ML=12,MR=198,CW=186;
+  let y=0;
+  const pj=getProjData();
+  const circs=generateCircuits();
+  const{cables,breakers,diffs}=getMatItems();
+  const ac=calcAcometida();
+  const totalW=equipos.reduce((a,e)=>a+e.totalW,0);
+  const expDate=getExpiry();
+  const ins=insul();
+
+  // ─ helpers ─
+  const R=(r,g,b)=>{doc.setFillColor(r,g,b);};
+  const T=(r,g,b)=>{doc.setTextColor(r,g,b);};
+  const F=(b)=>{doc.setFont('helvetica',b?'bold':'normal');};
+  const S=(s)=>{doc.setFontSize(s);};
+  const ck=(need=8)=>{if(y+need>H-12){doc.addPage();y=14;drawFooter();}};
+
+  const drawFooter=()=>{
+    const pg=doc.internal.getCurrentPageInfo().pageNumber;
+    R(0,30,70);doc.rect(0,H-9,W,9,'F');
+    T(130,170,210);S(6);F(false);
+    doc.text('SEST.SA — Servicios Eléctricos & Seguridad Tapia',ML,H-3.5);
+    doc.text(`Pág. ${pg}`,MR,H-3.5,{align:'right'});
+    T(0,140,255);doc.text('NEC ECUADOR',W/2,H-3.5,{align:'center'});
+  };
+
+  const secH=(title,r,g,b)=>{
+    ck(10);
+    R(r,g,b);doc.rect(ML,y,CW,7,'F');
+    R(255,220,50);doc.rect(ML,y,3,7,'F');
+    T(255,255,255);S(7.5);F(true);
+    doc.text(title,ML+5,y+4.8);
+    y+=9;
+  };
+
+  const thdr=(cols)=>{
+    ck(7);
+    R(0,35,75);doc.rect(ML,y,CW,6.5,'F');
+    T(120,180,240);S(5.8);F(true);
+    let x=ML+1;cols.forEach(c=>{doc.text(c.l,x,y+4.3);x+=c.w;});
+    y+=7;
+  };
+
+  const trow=(vals,cols,i,clrs=[])=>{
+    const h=6.5;ck(h);
+    if(i%2===0){R(235,242,252);doc.rect(ML,y,CW,h,'F');}
+    S(6.2);F(false);
+    let x=ML+1;
+    vals.forEach((v2,vi)=>{
+      const cl=clrs[vi]||[20,50,90];T(cl[0],cl[1],cl[2]);
+      const tw=cols[vi].w-2;
+      const str=String(v2);
+      const fitted=doc.splitTextToSize(str,tw)[0]||str;
+      doc.text(fitted,x,y+4.3);
+      x+=cols[vi].w;
+    });
+    y+=h;
+  };
+
+  // ═════ PAGE 1 HEADER ═════
+  // Navy bar
+  R(0,20,55);doc.rect(0,0,W,30,'F');
+  R(0,120,255);doc.rect(0,30,W,1.8,'F');
+  R(245,165,30);doc.rect(0,31.8,W,0.7,'F');
+
+  // Logo hexagon shape
+  R(0,90,200);doc.roundedRect(ML,4,22,22,2,2,'F');
+  R(0,140,255);doc.roundedRect(ML+1,5,20,20,1.5,1.5,'F');
+  T(255,255,255);S(10);F(true);doc.text('SE',ML+11,14,{align:'center'});
+  S(6);F(false);doc.text('ST.SA',ML+11,19,{align:'center'});
+
+  // Company name
+  T(255,255,255);S(17);F(true);doc.text('SEST.SA',39,14);
+  T(160,210,255);S(7.5);F(false);doc.text('SERVICIOS ELÉCTRICOS & SEGURIDAD TAPIA',39,20);
+
+  // Right side
+  T(255,210,50);S(13);F(true);doc.text('COTIZACIÓN ELÉCTRICA',MR,12,{align:'right'});
+  T(150,200,255);S(6.5);F(false);
+  doc.text('NEC ECUADOR  ·  IEC 60364',MR,18,{align:'right'});
+  doc.text(`Emitido: ${pj.date||today()}`,MR,24,{align:'right'});
+
+  y=36;
+
+  // ── PROJECT INFO ──
+  R(232,242,252);doc.rect(ML,y,CW,24,'F');
+  doc.setDrawColor(0,100,200);doc.setLineWidth(0.3);doc.rect(ML,y,CW,24,'S');
+  R(0,100,200);doc.rect(ML,y,2.5,24,'F');
+
+  const pFields=[
+    ['PROYECTO:',pj.name||'—',ML+4,y+7],
+    ['CLIENTE:',pj.client||'—',ML+4,y+14],
+    ['DIRECCIÓN:',pj.addr||'—',ML+4,y+21],
+    ['ELABORADO:',pj.by||'—',ML+70,y+7],
+    ['FECHA:',pj.date||today(),ML+70,y+14],
+    ['VÁLIDO HASTA:',expDate||'—',ML+70,y+21],
+    ['TIPO AISLANTE:',ins,ML+130,y+7],
+    ['FACTOR FS:',String(simFactor()),ML+130,y+14],
+    ['POTENCIA TOTAL:',`${(totalW/1000).toFixed(2)} kW`,ML+130,y+21],
+  ];
+  pFields.forEach(([lb,vl,px,py])=>{
+    T(80,110,150);S(5.5);F(true);doc.text(lb,px,py-0.5);
+    T(0,30,70);S(6.8);F(false);
+    doc.text(doc.splitTextToSize(String(vl),55)[0],px,py+4.5);
+  });
+  y+=28;
+
+  // ═════ SECTION: EQUIPOS ═════
+  secH('► EQUIPOS ELÉCTRICOS',0,70,155);
+  const eqC=[{l:'#',w:7},{l:'EQUIPO',w:42},{l:'TIPO',w:22},{l:'CANT.',w:10},
+    {l:'W TOTAL',w:20},{l:'VOLTAJE',w:15},{l:'CORRIENTE',w:22},{l:'CABLE',w:22},{l:'TERMOMAG.',w:22}];
+  thdr(eqC);
+  const tS={iluminacion:'Iluminación',fuerza:'Fuerza',especial:'Especial'};
+  const tC={iluminacion:[160,90,0],fuerza:[0,80,160],especial:[160,30,30]};
+  equipos.forEach((e,i)=>{
+    const awg=e.tipo==='iluminacion'?ILUM_AWG:e.tipo==='fuerza'?FUER_AWG:getAWG(e.I);
+    const br=e.tipo==='iluminacion'?15:e.tipo==='fuerza'?20:getBreaker(e.I);
+    const cl=Array(9).fill([20,50,90]);
+    cl[2]=tC[e.tipo];cl[4]=[0,70,150];cl[6]=[160,90,0];cl[7]=[0,80,155];cl[8]=[120,70,0];
+    trow([i+1,e.name,tS[e.tipo],e.qty,e.totalW.toLocaleString()+' W',e.volts+'V',e.I.toFixed(2)+' A',awg.awg,br+' A'],eqC,i,cl);
+  });
+  // Total row
+  ck(8);R(0,35,75);doc.rect(ML,y,CW,7.5,'F');
+  T(255,210,50);S(7);F(true);doc.text('TOTAL INSTALADO:',ML+2,y+4.9);
+  T(200,230,255);doc.text(`${totalW.toLocaleString()} W  /  ${(totalW/1000).toFixed(2)} kW`,ML+46,y+4.9);
+  y+=11;
+
+  // ═════ ACOMETIDA ═════
+  if(ac){
+    ck(32);
+    R(0,50,30);doc.rect(ML,y,CW,28,'F');
+    R(39,232,167);doc.rect(ML,y,3,28,'F');
+    T(200,255,230);S(8);F(true);doc.text('► ACOMETIDA — MEDIDOR → TABLERO PRINCIPAL',ML+5,y+6);
+    T(160,230,200);S(6);F(false);
+    doc.text('Factor de demanda NEC Ecuador + Factor de simultaneidad aplicado',ML+5,y+11.5);
+
+    const acItems=[
+      ['Demanda total calculada',`${(ac.totalDemand/1000).toFixed(2)} kW (FS=${ac.sf})`],
+      ['Corriente de acometida',`${ac.mainI.toFixed(2)} A @ ${ac.volt}V`],
+      [`Cable (${ins})`,`${ac.awg.awg} – ${ac.awg.mm2} (Amp. ${ac.awg[ins]}A)`],
+      ['Interruptor termomagético principal',`${ac.breaker} A`],
+    ];
+    acItems.forEach(([lb,vl],ai)=>{
+      T(150,220,190);S(5.8);F(true);doc.text(lb+':',ML+5,y+17+ai*4.5);
+      T(39,232,167);S(6.5);F(false);doc.text(vl,ML+70,y+17+ai*4.5);
+    });
+    y+=32;
+  }
+
+  // ═════ CIRCUITOS ═════
+  ck(20);
+  secH('► CIRCUITOS ELÉCTRICOS (NEC ECUADOR)',0,90,40);
+  const cC=[{l:'CIRC.',w:17},{l:'TIPO',w:22},{l:'EQUIPOS',w:48},{l:'CARGA',w:17},
+    {l:'CABLE',w:18},{l:'TERMOMAG.',w:20},{l:'DIFERENC.',w:22},{l:'%',w:12}];
+  thdr(cC);
+  circs.forEach((c,i)=>{
+    const pct=Math.round(c.totalA/c.maxA*100);
+    const cl=Array(8).fill([20,50,90]);
+    cl[1]=tC[c.tipo];cl[3]=[160,90,0];cl[4]=[0,80,155];cl[5]=[120,70,0];
+    cl[6]=[0,100,60];cl[7]=pct>90?[160,30,30]:[0,120,60];
+    const eqs=c.items.map(it=>it.name+(it.qty>1?`×${it.qty}`:'')).join(', ');
+    trow([c.id,tS[c.tipo],eqs,c.totalA.toFixed(2)+' A',c.awg.awg,c.breaker+' A',`${c.diff.amp}A/${c.diff.ma}`,pct+'%'],cC,i,cl);
+  });
+  y+=4;
+
+  // ═════ MATERIALES ═════
+  ck(15);
+  secH('► LISTA DE MATERIALES Y PRESUPUESTO',130,70,0);
+
+  const mC=[{l:'#',w:7},{l:'TIPO',w:22},{l:'DESCRIPCIÓN',w:54},{l:'CANT.',w:14},
+    {l:'UNID.',w:13},{l:'P.UNIT.',w:22},{l:'SUBTOTAL',w:22},{l:'IVA',w:16},{l:'TOTAL',w:16}];
+  thdr(mC);
+
+  let matRows2=[],sub2=0,ivaT2=0;
+  const addR2=(tipo,desc,qty,unit,up,ivaP,note='')=>{
+    const sb=up*qty;const iv=ivaP?sb*(ivaP/100):0;sub2+=sb;ivaT2+=iv;
+    matRows2.push([tipo,note?`${desc}\n${note}`:desc,qty,unit,'$'+up.toFixed(2),'$'+sb.toFixed(2),iv>0?'$'+iv.toFixed(2):'—','$'+(sb+iv).toFixed(2)]);
+  };
+  Object.entries(cables).forEach(([k,c])=>{
+    const up=matPrices[k]||0,mode=cableMode[k]?.mode||'metro',rsize=cableMode[k]?.rollSize||100;
+    const metros=c.count*15,iva=matIVA[k]||0;
+    if(mode==='rollo'){const r=Math.ceil(metros/rsize);addR2('Cable',`${c.awg} (${c.mm2})`,r,'rollos',up,iva,`~${metros}m`);}
+    else addR2('Cable',`${c.awg} (${c.mm2})`,metros,'m',up,iva,'15m/circ.');
+  });
+  Object.entries(breakers).forEach(([k,b])=>addR2('Termomag.',`Termomagético ${b.amp}A`,b.count,'u',matPrices[k]||0,matIVA[k]||0));
+  Object.entries(diffs).forEach(([k,d])=>{if(!hiddenDiffs[k])addR2('Diferencial',`Diferencial ${d.amp}A/${d.ma}`,d.count,'u',matPrices[k]||0,matIVA[k]||0);});
+  equipos.forEach(e=>{const ep=equipPrices[e.id]||{price:0,iva:0};if(ep.price>0)addR2('Equipo',`${e.name} (×${e.qty})`,1,'u',ep.price,ep.iva||0);});
+  extras.forEach(e=>addR2('Adicional',e.desc,e.qty,'u',e.price,e.iva||0));
+
+  const mCC=[{l:'#',w:7},{l:'TIPO',w:22},{l:'DESCRIPCIÓN',w:54},{l:'CANT.',w:14},{l:'UN.',w:13},{l:'P.UNIT.',w:22},{l:'SUBTOT.',w:22},{l:'IVA',w:16},{l:'TOTAL',w:16}];
+  const mTypeC={'Cable':[0,70,150],'Termomag.':[140,80,0],'Diferencial':[150,30,30],'Equipo':[0,100,130],'Adicional':[0,110,60]};
+  matRows2.forEach((r,i)=>{
+    const cl=Array(9).fill([20,50,90]);
+    cl[1]=mTypeC[r[0]]||[50,50,50];cl[6]=[0,90,180];cl[7]=r[7]!=='—'?[180,90,0]:[120,120,120];cl[8]=[0,120,60];
+    trow([i+1,...r],mCC,i,cl);
+  });
+
+  y+=4;
+
+  // ── TOTALS BOX ──
+  ck(ivaT2>0?30:22);
+  R(0,30,70);doc.roundedRect(ML,y,CW,ivaT2>0?28:20,2,2,'F');
+  R(0,120,255);doc.roundedRect(ML,y,3,ivaT2>0?28:20,2,2,'F');
+
+  T(160,200,240);S(7);F(false);doc.text('Subtotal (sin IVA):',ML+6,y+7);
+  T(255,255,255);S(8);F(true);doc.text(`$${sub2.toFixed(2)}`,MR-2,y+7,{align:'right'});
+
+  if(ivaT2>0){
+    T(245,165,30);S(7);F(false);doc.text('Impuesto IVA 15%:',ML+6,y+14);
+    T(245,165,30);S(8);F(true);doc.text(`$${ivaT2.toFixed(2)}`,MR-2,y+14,{align:'right'});
+    doc.setDrawColor(0,120,255);doc.setLineWidth(0.3);doc.line(ML+4,y+16,MR-2,y+16);
+    T(255,220,50);S(10);F(true);doc.text('TOTAL:',ML+6,y+24);
+    T(255,220,50);S(12);doc.text(`$${(sub2+ivaT2).toFixed(2)}`,MR-2,y+24,{align:'right'});
+    y+=32;
+  } else {
+    doc.setDrawColor(0,120,255);doc.setLineWidth(0.3);doc.line(ML+4,y+9,MR-2,y+9);
+    T(255,220,50);S(11);F(true);doc.text('TOTAL:',ML+6,y+17);
+    T(255,220,50);S(13);doc.text(`$${sub2.toFixed(2)}`,MR-2,y+17,{align:'right'});
+    y+=24;
+  }
+
+  // ── SIGNATURES ──
+  ck(32);y+=4;
+  [[ML,'Elaborado por'],[ML+66,'Revisado por'],[ML+132,'Aprobado / Cliente']].forEach(([sx,lb],si)=>{
+    doc.setDrawColor(0,80,150);doc.setLineWidth(0.5);doc.line(sx,y+22,sx+54,y+22);
+    T(80,110,150);S(6.5);F(false);doc.text(lb,sx+27,y+27,{align:'center'});
+    if(si===0&&pj.by){T(0,40,90);S(7);F(true);doc.text(pj.by,sx+27,y+18,{align:'center'});}
+  });
+  y+=34;
+
+  // ── DISCLAIMER ──
+  ck(14);
+  R(235,240,248);doc.roundedRect(ML,y,CW,11,1.5,1.5,'F');
+  doc.setDrawColor(0,90,180);doc.setLineWidth(0.2);doc.roundedRect(ML,y,CW,11,1.5,1.5,'S');
+  T(80,110,150);S(6);F(false);
+  doc.text('⚠  Esta cotización es preliminar y tiene una validez de '+validityDays+' día(s) desde la fecha de emisión.',W/2,y+4.5,{align:'center'});
+  doc.text('Calculado según NEC Ecuador, Reglamento Técnico Ecuatoriano RTE INEN 001 y estándares IEC 60364.',W/2,y+9,{align:'center'});
+
+  // Footer all pages
+  const np=doc.getNumberOfPages();
+  for(let p=1;p<=np;p++){doc.setPage(p);drawFooter();}
+
+  const fname=`Cotizacion_SESTSA_${(pj.name||'Proyecto').replace(/\s+/g,'_')}_${pj.date||today()}.pdf`;
+  doc.save(fname);
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+sv('pj-date',today());
+loadState();
+updateExpiry();
+</script>
+</body>
+</html>
